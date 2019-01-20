@@ -7,6 +7,7 @@
 #include <iostream>
 #include <math.h>
 #include <vector>
+#include </usr/include/mpi/mpi.h>
 #define PI 3.14159265
 using namespace std;
 
@@ -69,6 +70,11 @@ void leer(){
     coordenada coordNodo1, coordNodo2, coordNodo3;
     int nombre = 5001;
     int existe = 0;
+    int cantidad_proc;
+    int mi_rango;
+    int destino=1;
+    char lineaAux[40];
+    MPI_Status estado;
     
     ifstream archivo_mesh;
     ifstream archivo_node;
@@ -76,6 +82,10 @@ void leer(){
     ofstream archivo_salida_node;
     
     float anguloPrueba = 40.35;
+    
+    MPI_Init(NULL, NULL); 
+    MPI_Comm_size(MPI_COMM_WORLD, &cantidad_proc);  
+    MPI_Comm_rank(MPI_COMM_WORLD, &mi_rango);
     
     archivo_mesh.open(rutaEntradaMesh, ios::in); //abriendo archivo modo lectura
     archivo_node.open(rutaEntradaNode, ios::in);
@@ -87,69 +97,84 @@ void leer(){
     }
     else{
         getline(archivo_mesh, lineaMesh);
-        while(getline(archivo_mesh, lineaMesh)){ //recorre archivo txt  
-            float anguloA, anguloB, anguloC;
-            float ladoAB, ladoBC, ladoCA;
-            string nodo1, nodo2, nodo3;
-            separar(lineaMesh, nodo1, nodo2, nodo3);
-            while(getline(archivo_node, lineaNode)){
-                string nodo, valorX, valorY;
-                separar(lineaNode, nodo, valorX, valorY);
-                if(nodo1 == nodo){
-                    coordNodo1.x = stof(valorX);
-                    coordNodo1.y = stof(valorY);
-                }
-                if(nodo2 == nodo){
-                    coordNodo2.x = stof(valorX);
-                    coordNodo2.y = stof(valorY);
-                }
-                if(nodo3 == nodo){
-                    coordNodo3.x = stof(valorX);
-                    coordNodo3.y = stof(valorY);
-                }
-            }
-            archivo_node.clear();
-            archivo_node.seekg(0, ios::beg);
-            angulos(coordNodo1, coordNodo2, coordNodo3, anguloA, anguloB, anguloC);
-            if(anguloA <= anguloPrueba || anguloB <= anguloPrueba || anguloC <= anguloPrueba){
-                coordenada nuevoNodo;
-                string lineaSalidaNode;
-                lados(coordNodo1, coordNodo2, coordNodo3, ladoAB, ladoBC, ladoCA);
-                if(ladoAB >= ladoBC && ladoAB >= ladoCA){
-                    nuevoNodo.x = (coordNodo1.x + coordNodo2.x) / 2;
-                    nuevoNodo.y = (coordNodo1.y + coordNodo2.y) / 2;
-                }
-                if(ladoBC >= ladoAB && ladoBC >= ladoCA){
-                    nuevoNodo.x = (coordNodo2.x + coordNodo3.x) / 2;
-                    nuevoNodo.y = (coordNodo2.y + coordNodo3.y) / 2;
-                }
-                if(ladoCA >= ladoBC && ladoCA >= ladoAB){
-                    nuevoNodo.x = (coordNodo3.x + coordNodo1.x) / 2;
-                    nuevoNodo.y = (coordNodo3.y + coordNodo1.y) / 2;
-                }
-                while(getline(archivo_node, lineaNode)){//revisar si el nodo existe
+        while(!archivo_mesh.eof()){
+            if(mi_rango == 0){
+                for(destino=1; destino<cantidad_proc; destino++){
+                    getline(archivo_mesh, lineaMesh);
+                    
+                    if(lineaMesh.size() < 3) break;
+                    strcpy(lineaAux, lineaMesh.c_str());
+                    MPI_Send(lineaAux, strlen(lineaAux)+1, MPI_CHAR,
+                            destino, 0, MPI_COMM_WORLD);
+                }      
+            }                
+            else{  
+                MPI_Recv(lineaAux, 15, MPI_CHAR, 0, 0, MPI_COMM_WORLD, &estado);
+                lineaMesh = lineaAux;
+                float anguloA, anguloB, anguloC;
+                float ladoAB, ladoBC, ladoCA;
+                string nodo1, nodo2, nodo3;
+                separar(lineaMesh, nodo1, nodo2, nodo3);
+                while(getline(archivo_node, lineaNode)){
                     string nodo, valorX, valorY;
                     separar(lineaNode, nodo, valorX, valorY);
-                    if(valorX == to_string(nuevoNodo.x) && valorY == to_string(nuevoNodo.y)){
-                        existe = 1;
+                    if(nodo1 == nodo){
+                        coordNodo1.x = stof(valorX);
+                        coordNodo1.y = stof(valorY);
+                    }
+                    if(nodo2 == nodo){
+                        coordNodo2.x = stof(valorX);
+                        coordNodo2.y = stof(valorY);
+                    }
+                    if(nodo3 == nodo){
+                        coordNodo3.x = stof(valorX);
+                        coordNodo3.y = stof(valorY);
                     }
                 }
                 archivo_node.clear();
                 archivo_node.seekg(0, ios::beg);
-                if(existe == 0){
-                    lineaSalidaNode = to_string(nombre) +" "+ to_string(nuevoNodo.x) +" "+ to_string(nuevoNodo.y);
-                    archivo_salida_node << lineaSalidaNode << "\n";
-                    nombre++;
+                angulos(coordNodo1, coordNodo2, coordNodo3, anguloA, anguloB, anguloC);
+                if((anguloA <= anguloPrueba) || (anguloB <= anguloPrueba) || (anguloC <= anguloPrueba)){
+                    coordenada nuevoNodo;
+                    string lineaSalidaNode;
+                    lados(coordNodo1, coordNodo2, coordNodo3, ladoAB, ladoBC, ladoCA);
+                    if(ladoAB >= ladoBC && ladoAB >= ladoCA){
+                        nuevoNodo.x = (coordNodo1.x + coordNodo2.x) / 2;
+                        nuevoNodo.y = (coordNodo1.y + coordNodo2.y) / 2;
+                    }
+                    if(ladoBC >= ladoAB && ladoBC >= ladoCA){
+                        nuevoNodo.x = (coordNodo2.x + coordNodo3.x) / 2;
+                        nuevoNodo.y = (coordNodo2.y + coordNodo3.y) / 2;
+                    }
+                    if(ladoCA >= ladoBC && ladoCA >= ladoAB){
+                        nuevoNodo.x = (coordNodo3.x + coordNodo1.x) / 2;
+                        nuevoNodo.y = (coordNodo3.y + coordNodo1.y) / 2;
+                    }
+                    while(getline(archivo_node, lineaNode)){//revisar si el nodo existe
+                        string nodo, valorX, valorY;
+                        separar(lineaNode, nodo, valorX, valorY);
+                        if(valorX == to_string(nuevoNodo.x) && valorY == to_string(nuevoNodo.y)){
+                            existe = 1;
+                        }
+                    }
+                    archivo_node.clear();
+                    archivo_node.seekg(0, ios::beg);
+                    if(existe == 0){
+                        lineaSalidaNode = to_string(nombre) +" "+ to_string(nuevoNodo.x) +" "+ to_string(nuevoNodo.y);
+                        archivo_salida_node << lineaSalidaNode << "\n";
+                        nombre++;
+                    }
+                    else{
+                        existe = 0;
+                    }
                 }
-                else{
-                    existe = 0;
-                }
-            }
-        }
+            }           
+        }   
     }
     archivo_mesh.close();
     archivo_node.close();
     archivo_salida_node.close();
+    MPI_Finalize();
 }
 
 void archivoFinalNode(){
@@ -259,7 +284,10 @@ void conforme(){
                     c3++;
                 }
             }
-            c,c1,c2,c3=0;
+            c=0;
+            c1=0;
+            c2=0;
+            c3=0;
             archivo_node.clear();
             archivo_node.seekg(0, ios::beg);
         }

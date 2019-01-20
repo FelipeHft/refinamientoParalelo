@@ -9,19 +9,19 @@ CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux
 CND_ARTIFACT_DIR_Debug=dist/Debug/GNU-Linux
-CND_ARTIFACT_NAME_Debug=refinamiento
-CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/refinamiento
+CND_ARTIFACT_NAME_Debug=refinamientoparalelo
+CND_ARTIFACT_PATH_Debug=dist/Debug/GNU-Linux/refinamientoparalelo
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux/package
-CND_PACKAGE_NAME_Debug=refinamiento.tar
-CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/refinamiento.tar
+CND_PACKAGE_NAME_Debug=refinamientoparalelo.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux/package/refinamientoparalelo.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux
 CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux
-CND_ARTIFACT_NAME_Release=refinamiento
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/refinamiento
+CND_ARTIFACT_NAME_Release=refinamientoparalelo
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux/refinamientoparalelo
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux/package
-CND_PACKAGE_NAME_Release=refinamiento.tar
-CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/refinamiento.tar
+CND_PACKAGE_NAME_Release=refinamientoparalelo.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux/package/refinamientoparalelo.tar
 #
 # include compiler specific variables
 #
