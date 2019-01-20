@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include "Funciones.h"
+#include </usr/include/mpi/mpi.h>
 
 using namespace std;
 
